@@ -2,28 +2,14 @@
  * Created by ebram on 7/21/2014.
  */
 
-function DataFormatter(plotterVar) {
-    var self = this;
-    var plotter = plotterVar;
+function DataFormatter() {
 
     var locations = [[10,0],[16,0],[32,0],[64,0],[125,0],[250,0],[500,0],[1000,0],[2000,0],[5,0]];
 
     var basicData;
 
-    this.SetPlotter = function (plot) {
-        plotter = plot;
-    }
-
-    this.GetSize = function () {
-        return plotter.GetSize();
-    }
-
     this.SetControlPoint = function(index, point) {
           basicData[index].control.location = point;
-    }
-
-    this.ScreenToPointLocation = function (point) {
-        return plotter.ScreenToPointLocation(point);
     }
 
     this.SetData = function(basic) {
@@ -108,21 +94,5 @@ function DataFormatter(plotterVar) {
 
     this.GetData = function () {
         return basicData;
-    }
-
-    this.IsPointInsideCtrlPt = function (point) {
-        for (var i = 0; i < basicData.length; i++) {
-              if (basicData[i].visible && basicData[i].control.visible) {
-                  // this point is visible, see if it matches
-                  var screenloc = plotter.PointToScreenLocation(basicData[i].control.location[0], basicData[i].control.location[1]);
-                  var dist = Math.sqrt(Math.pow(screenloc[0] - point[0], 2) + Math.pow(screenloc[1] - point[1], 2));
-                  if (dist < plotter.GetSize() / 2) {
-                      // it's within the radius!
-                      // return this instance
-                      return i;
-                  }
-              }
-        }
-            return -1;
     }
 }

@@ -22,13 +22,13 @@ $(function() {
     var context = canvas.getContext('2d');
     canvas.width  = bounds['maxX'] - bounds['minX'];
     canvas.height = bounds['maxY'] - bounds['minY'];
+    var dataFormatter = new DataFormatter();
+    dataFormatter.SetData(Maindata);
 
     var bd = new BackgroundDrawer(uniqueID, context, bounds);
     var grapher = new MainPlotter(uniqueID, context, bounds, sentDiv);
-    var dataFormatter = new DataFormatter(grapher);
-    dataFormatter.SetData(Maindata);
-    var events = new EventsHandler(uniqueID, sentDiv, bounds, dataFormatter);
     grapher.SetData(dataFormatter.GetData());
+    var events = new EventsHandler(uniqueID, sentDiv, bounds, dataFormatter, grapher);
 
 
     bd.CreateBackGround(minYticks, maxYticks);

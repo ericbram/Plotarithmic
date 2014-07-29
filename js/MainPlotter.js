@@ -2,18 +2,15 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
     var self = this;
     var baseDiv = sentDiv;
     var ID = uniqueID;
-    var sizeval = 16;
     var context = contextVar;
     var bounds = boundsVar;
     var data;
+
+
     var pixelsX, pixelsY;
     var logDiffX, diffY;
     var minX, maxX;
     var minY, maxY;
-
-    this.GetSize = function () {
-        return sizeval;
-    }
 
     this.SetData = function (newData) {
         self.data = newData;
@@ -150,5 +147,21 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
         var yCoord = pixelsY * percY;
 
         return [xCoord, yCoord];
+    }
+
+    this.IsPointInsideCtrlPt = function (point) {
+        for (var i = 0; i < self.data.length; i++) {
+            if (self.data[i].visible && self.data[i].control.visible) {
+                // this point is visible, see if it matches
+                var screenloc = self.PointToScreenLocation(self.data[i].control.location[0], self.data[i].control.location[1]);
+                var dist = Math.sqrt(Math.pow(screenloc[0] - point[0], 2) + Math.pow(screenloc[1] - point[1], 2));
+                if (dist < ControlSize / 2) {
+                    // it's within the radius!
+                    // return this instance
+                    return i;
+                }
+            }
+        }
+        return -1;
     }
 }
