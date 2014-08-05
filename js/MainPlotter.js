@@ -28,10 +28,11 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
 
             // use lastY to avoid drawing unnecessary lines
             var last = self.PointToScreenLocation(value.data[0][0], value.data[0][1]);
-
+            var lastdrawn = self.PointToScreenLocation(value.data[0][0], value.data[0][1]);
+            var coord;
             for (var i = 0; i < value.data.length; i++) {
                 // inside here is a single x,y coordinate at value.data[i]
-                var coord = self.PointToScreenLocation(value.data[i][0], value.data[i][1]);
+                coord = self.PointToScreenLocation(value.data[i][0], value.data[i][1]);
                 // calculate next point and draw line to it
 
                 // if we didnt even move over a pixel, don't bother
@@ -39,18 +40,31 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
                     continue;
 
                 // draw changing line
-                if (last[1] != coord[1]) {
+                if (lastdrawn[1] != coord[1]) {
                     context.beginPath();
                     context.lineWidth = 1;
-                    context.moveTo(last[0] + 0.5, last[1] + 0.5);
+                    context.moveTo(lastdrawn[0] + 0.5, lastdrawn[1] + 0.5);
                     context.lineTo(coord[0] + 0.5, coord[1] + 0.5);
                     context.strokeStyle = value.color;
                     context.closePath();
                     context.stroke();
+
+                    lastdrawn = coord;
                 }
 
                 last = coord;
             }
+
+            if (lastdrawn[0] != coord[0]) {
+                context.beginPath();
+                context.lineWidth = 1;
+                context.moveTo(lastdrawn[0] + 0.5, lastdrawn[1] + 0.5);
+                context.lineTo(coord[0] + 0.5, coord[1] + 0.5);
+                context.strokeStyle = value.color;
+                context.closePath();
+                context.stroke();
+            }
+
 
             // now it's time to draw the control point
 
@@ -62,16 +76,19 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
             var ctrlLoc = self.PointToScreenLocation(value.control.location[0], value.control.location[1]);
             var ctrlID = ID + '_ctrl' + index;
             var sizeval = 16;
+            while ($("#" + ctrlID + 'div').length > 0) {
+                $("#" + ctrlID + 'div').remove();
+            }
 
             $(baseDiv).append('<div id=\"' + ctrlID + 'div\"/>');
             $("#" + ctrlID + "div").append('<canvas id=\"' + ctrlID + '\"/>');
             $("#" + ctrlID + "div").css('position', 'absolute')
-                .css('left', ctrlLoc[0] - sizeval / 2)
+                .css('left', ctrlLoc[0] - sizeval / 2 + LEFT_SIZE)
                 .css('top', ctrlLoc[1] - sizeval / 2)
                 .css('width', sizeval)
                 .css('height', sizeval);
 
-            var tmpcanvas = document.getElementById(ctrlID)
+            var tmpcanvas = document.getElementById(ctrlID);
             var tmpcontext = tmpcanvas.getContext('2d');
 
             tmpcanvas.width = sizeval;
@@ -110,23 +127,23 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
     }
 
     this.ScreenToPointLocation = function (point) {
-        // get the log difference between max and min freqs
-        var  difflog =  log10(maxX) - log10(minX);
+        // get the log difference between max and min x values
+        var difflog = log10(maxX) - log10(minX);
 
-        // get the precentage that the click was across the horizontal plane
-        var perc = point[0]/pixelsX;
+        // get the percentage that the click was across the horizontal plane
+        var perc = point[0]  / pixelsX;
 
-        // convert that percentage to a frequency
-        var xval = Math.pow(10, log10(minX) + perc*difflog);
+        // convert that percentage to an X value
+        var xval = Math.pow(10, log10(minX) + perc * difflog);
 
-        var percY = point[1]/pixelsY;
+        var percY = point[1] / pixelsY;
 
-         var yval = maxY - percY * diffY;
+        var yval = maxY - percY * diffY;
 
         return [xval, yval];
     }
 
-    this.PointToScreenLocation = function(dataX, dataY) {
+    this.PointToScreenLocation = function (dataX, dataY) {
         // get the log of the value to convert
         var logData = log10(dataX);
         // get the percentage this value is in relation to the entire range
