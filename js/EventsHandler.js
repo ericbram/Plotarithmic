@@ -42,7 +42,7 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
             }
             else {
                 // it's time to start a zoom
-                startZoom = [e.pageX - $(this).parent().offset().left - LEFT_SIZE, e.pageY - $(this).parent().offset().top- parseInt($(this).parent().css('padding-top'))];
+                startZoom = [e.pageX - $(this).parent().offset().left, e.pageY - $(this).parent().offset().top- parseInt($(this).parent().css('padding-top'))];
                 if (startZoom[0] < bounds['minX'] || startZoom[0] > bounds['maxX']) {
                     return;
                 }
@@ -69,7 +69,7 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
 
              // get the coordinates of the mouse (in relation to the canvas, not the page)
              xval = xval  - $(self.div).parent().offset().left;
-             yval = yval - $(self.div).parent().offset().top - parseInt($(this).parent().css('padding-top'));
+             yval = yval - $(self.div).parent().offset().top - parseInt($(self.div).parent().css('padding-top'));
 
              // do bounds checking
              if (xval < bounds['minX']) {
@@ -93,19 +93,23 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
              var location =  self.plotter.ScreenToPointLocation([xval, yval]);
 
              // update the tooltip
-             $("#tooltipGraph").text(Math.round(location[0]) + "," + Math.round(location[1]*100)/100).css('display', 'inline').css('top', yval - sz - 20  + $(self.div).parent().offset().top + parseInt($(this).parent().css('padding-top'))).css('left', xval + sz + 40 + $(self.div).parent().offset().left);
+             $("#tooltipGraph").text(Math.round(location[0]) + "," + Math.round(location[1]*100)/100).css('display', 'inline').css('top', yval - sz - 20  + $(self.div).parent().offset().top + parseInt($(self.div).parent().css('padding-top'))).css('left', xval + sz + 40 + $(self.div).parent().offset().left);
 
              // trigger a mousemove over the DOM for any software to hook into
              $.event.trigger("PlotarithmicMouseMove", [activePoint, location[0], location[1]]);
          } if (isZooming) {
             // handle zooming
-            e.target.style.cursor='default';
+            try {
+                e.target.style.cursor = 'default';
+            }
+            catch (Exception) {}
+            // get the coordinates of the mouse (in relation to the canvas, not the page)
+
             var xval = e.pageX;
             var yval = e.pageY;
 
-            // get the coordinates of the mouse (in relation to the canvas, not the page)
-            xval = xval  - $(self.div).parent().offset().left - LEFT_SIZE;
-            yval = yval - $(self.div).parent().offset().top- parseInt($(this).parent().css('padding-top'));
+            xval = xval  - $(self.div).parent().offset().left;
+            yval = yval - $(self.div).parent().offset().top- parseInt($(self.div).parent().css('padding-top'));
 
             // do bounds checking
             if (xval < bounds['minX']) {
@@ -119,13 +123,14 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
                 yval = bounds['maxY'];
             }
 
+
             var leftmost = xval < startZoom[0] ? xval : startZoom[0];
-            var width = xval < startZoom[0] ? startZoom[0] - xval : xval - startZoom[0];
+            var width = xval < startZoom[0] ? startZoom[0] - xval : xval - startZoom[0] - 4;
             var topmost = yval < startZoom[1] ? yval : startZoom[1];
-            var height = yval < startZoom[1] ? startZoom[1] - yval :  yval - startZoom[1];
+            var height = yval < startZoom[1] ? startZoom[1] - yval :  yval - startZoom[1] - 4;
 
 
-            $("#PlotarithmicSelector").css('left', leftmost + $(self.div).parent().offset().left + LEFT_SIZE).css('top', topmost).css('width', width + 'px').css('height', height + 'px').css('display', 'inline');
+            $("#PlotarithmicSelector").css('left', leftmost).css('top', topmost).css('width', width + 'px').css('height', height + 'px').css('display', 'inline');
         }
     });
 
@@ -135,6 +140,11 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
             // set new point location
             var xval = e.pageX;
             var yval = e.pageY;
+
+
+            xval = xval - $(self.div).parent().offset().left;
+            yval = yval - $(self.div).parent().offset().top- parseInt($(self.div).parent().css('padding-top'));
+
             // do bounds checking
             if (xval < bounds['minX']) {
                 xval = bounds['minX'];
@@ -147,8 +157,7 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
                 yval = bounds['maxY'];
             }
 
-            var xval = xval - $(self.div).parent().offset().left - LEFT_SIZE;
-            var yval = yval - $(self.div).parent().offset().top- parseInt($(this).parent().css('padding-top'));
+            xval = xval - LEFT_SIZE;
 
             var location = self.plotter.ScreenToPointLocation([xval, yval]);
             self.df.SetControlPoint(activePoint, location);
@@ -164,7 +173,7 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
             }
 
             var xval = e.pageX - $(self.div).parent().offset().left - LEFT_SIZE;
-            var yval = e.pageY - $(self.div).parent().offset().top- parseInt($(this).parent().css('padding-top'));
+            var yval = e.pageY - $(self.div).parent().offset().top- parseInt($(self.div).parent().css('padding-top'));
 
             if (xval < bounds['minX']) {
                 xval = bounds['minX'];
@@ -189,6 +198,8 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
             var maxX = bottomright[0];
             var maxY = topleft[1];
             var minY = bottomright[1];
+
+            console.debug([minX, maxX, minY, maxY]);
 
             $.event.trigger("PlotarithmicZoom", [minX, maxX, minY, maxY]);
 
