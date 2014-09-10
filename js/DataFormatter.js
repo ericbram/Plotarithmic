@@ -12,6 +12,15 @@ function DataFormatter() {
           basicData[index].control.location = point;
     }
 
+    this.GetControlPoint = function (index) {
+        return basicData[index].control.location;
+
+    }
+
+    this.ControlPointDraggableType = function(index) {
+        return basicData[index].control.draggable;
+    }
+
     this.SetData = function(basic) {
         var tmpdata = basic;
 

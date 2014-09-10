@@ -1,7 +1,7 @@
 function Plotarithmic(uniqueID, dataval, graphDiv, bounds) {
     var firstrun = true;
     var self = this;
-    var bounds = {minX: LEFT_SIZE, minY: 0, maxX: graphDiv.width(), maxY: graphDiv.height() - LEFT_SIZE, minXValue: bounds['minXValue'], maxXValue: bounds['maxXValue'], minYValue: bounds['minYValue'], maxYValue: bounds['maxYValue']};
+    var bounds = {minX: LEFT_SIZE, minY: 0, maxX: graphDiv.width(), maxY: graphDiv.height() - TOP_SIZE - BOTTOM_SIZE, minXValue: bounds['minXValue'], maxXValue: bounds['maxXValue'], minYValue: bounds['minYValue'], maxYValue: bounds['maxYValue']};
     var minYticks = 8;
     var maxYticks = 16;
     var dfLocal, grapherLocal, events;
@@ -11,11 +11,11 @@ function Plotarithmic(uniqueID, dataval, graphDiv, bounds) {
 
     function Setup(Maindata, bounds) {
         $(graphDiv).append('<canvas id=\"' + uniqueID + 'innerGraphCanvas\"/>');
-        $("#" + uniqueID + "innerGraphCanvas").css('position', 'absolute').css('left', bounds['minX']).css('top', bounds['minY']);
+        $("#" + uniqueID + "innerGraphCanvas").css('left', bounds['minX'] - LEFT_SIZE).css('top', bounds['minY']).css('margin-top', TOP_SIZE);
         var canvas = document.getElementById(uniqueID + 'innerGraphCanvas');
         var context = canvas.getContext('2d');
-        canvas.width = bounds['maxX'] - bounds['minX'];
-        canvas.height = bounds['maxY'] - bounds['minY'];
+        canvas.width = bounds['maxX'] - bounds['minX'] + LEFT_SIZE;
+        canvas.height = bounds['maxY'] - bounds['minY'] + BOTTOM_SIZE;
         dfLocal = new DataFormatter();
         dfLocal.SetData(Maindata);
 

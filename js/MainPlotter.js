@@ -83,8 +83,8 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
             $(baseDiv).append('<div id=\"' + ctrlID + 'div\"/>');
             $("#" + ctrlID + "div").append('<canvas id=\"' + ctrlID + '\"/>');
             $("#" + ctrlID + "div").css('position', 'absolute')
-                .css('left', ctrlLoc[0] - sizeval / 2 + LEFT_SIZE)
-                .css('top', ctrlLoc[1] - sizeval / 2)
+                .css('left', ctrlLoc[0] - sizeval / 2)
+                .css('top', ctrlLoc[1] - sizeval / 2 + TOP_SIZE)
                 .css('width', sizeval)
                 .css('height', sizeval);
 
@@ -131,12 +131,12 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
         var difflog = log10(maxX) - log10(minX);
 
         // get the percentage that the click was across the horizontal plane
-        var perc = point[0]  / pixelsX;
+        var perc = (point[0] - LEFT_SIZE)  / pixelsX;
 
         // convert that percentage to an X value
         var xval = Math.pow(10, log10(minX) + perc * difflog);
 
-        var percY = point[1] / pixelsY;
+        var percY = (point[1] - TOP_SIZE) / pixelsY;
 
         var yval = maxY - percY * diffY;
 
@@ -149,7 +149,7 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
         // get the percentage this value is in relation to the entire range
         var percX = (logData - log10(minX)) / logDiffX;
         // multiply this percentage by the width in pixels to get the pixel over
-        var xCoord = pixelsX * percX;
+        var xCoord = pixelsX * percX + LEFT_SIZE;
 
         var yVal = -1;
         // get the actual distance from the max value

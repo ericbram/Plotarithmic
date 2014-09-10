@@ -15,12 +15,14 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
     var startZoom = [];
     var isZooming = false;
 
-    this.UpdateObjects = function(dfvar, plot) {
+    var dragtype, dragStartX, dragStartY;
+
+    this.UpdateObjects = function (dfvar, plot) {
         self.plotter = plot;
         self.df = dfvar;
     }
 
-    $(function() {
+    $(function () {
         self.div = mainDiv;
 
         // handle the mousedown event,
@@ -31,18 +33,34 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
                 // not a left click
                 return;
             }
-            var screencoords = [e.pageX - $(this).parent().offset().left - LEFT_SIZE, e.pageY - $(this).parent().offset().top - parseInt($(this).parent().css('padding-top'))];
+            var screencoords = [
+                    e.pageX - $(this).parent().offset().left,
+                    e.pageY - $(this).parent().offset().top - parseInt($(this).parent().css('padding-top')) - TOP_SIZE];
 
             // need to see if these screen coords are within a control point
             var pt = self.plotter.IsPointInsideCtrlPt(screencoords);
             if (pt > -1) {
-                // it's time to start a drag
-                activePoint = pt;
-                showTooltip(screencoords[0], screencoords[1], screencoords[0] + "," + screencoords[1]);
+
+                // it's time to start a drag... if it's draggable
+                dragtype = self.df.ControlPointDraggableType(pt);
+
+                // see if it's a specific type of drag.
+                // at this point, also store the starting x and y
+                // just so we don't have to compute that during every move event
+                if (dragtype == "XONLY" || dragtype == "YONLY" || dragtype) {
+                    activePoint = pt;
+                    var tmppoint = self.df.GetControlPoint(pt);
+                    var scloc = self.plotter.PointToScreenLocation(tmppoint[0],tmppoint[1]);
+                    dragStartX = scloc[0];
+                    dragStartY = scloc[1];
+                    showTooltip(screencoords[0], screencoords[1], screencoords[0] + "," + screencoords[1]);
+                }
             }
             else {
                 // it's time to start a zoom
-                startZoom = [e.pageX - $(this).parent().offset().left, e.pageY - $(this).parent().offset().top- parseInt($(this).parent().css('padding-top'))];
+                startZoom = [
+                        e.pageX - $(this).parent().offset().left,
+                        e.pageY - $(this).parent().offset().top - parseInt($(this).parent().css('padding-top'))];
                 if (startZoom[0] < bounds['minX'] || startZoom[0] > bounds['maxX']) {
                     return;
                 }
@@ -59,57 +77,17 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
 
     $(document).on('mousemove', function (e) {
         // check to see if we are actively dragging a control point
-         if (activePoint != -1) {
+        if (activePoint != -1) {
 
-             // control point is being moved
-             e.target.style.cursor='default';
-
-             var xval = e.pageX;
-             var yval = e.pageY;
-
-             // get the coordinates of the mouse (in relation to the canvas, not the page)
-             xval = xval  - $(self.div).parent().offset().left;
-             yval = yval - $(self.div).parent().offset().top - parseInt($(self.div).parent().css('padding-top'));
-
-             // do bounds checking
-             if (xval < bounds['minX']) {
-                 xval = bounds['minX'];
-             } else if (xval > bounds['maxX']) {
-                 xval = bounds['maxX'];
-             }
-             if (yval < bounds['minY']) {
-                 yval = bounds['minY'];
-             } else if (yval > bounds['maxY']) {
-                 yval = bounds['maxY'];
-             }
-
-             xval = xval - LEFT_SIZE;
-
-             // use the size of the control point as well to help put the tooltip in a friendly place
-             var sz = ControlSize;
-              $("#" + ID + '_ctrl' + activePoint + 'div').css('left', xval - sz/2 + LEFT_SIZE).css('top', yval - sz/2);
-
-             // get the x,y graph values of the mouse location
-             var location =  self.plotter.ScreenToPointLocation([xval, yval]);
-
-             // update the tooltip
-             $("#tooltipGraph").text(Math.round(location[0]) + "," + Math.round(location[1]*100)/100).css('display', 'inline').css('top', yval - sz - 20  + $(self.div).parent().offset().top + parseInt($(self.div).parent().css('padding-top'))).css('left', xval + sz + 40 + $(self.div).parent().offset().left);
-
-             // trigger a mousemove over the DOM for any software to hook into
-             $.event.trigger("PlotarithmicMouseMove", [activePoint, location[0], location[1]]);
-         } if (isZooming) {
-            // handle zooming
-            try {
-                e.target.style.cursor = 'default';
-            }
-            catch (Exception) {}
-            // get the coordinates of the mouse (in relation to the canvas, not the page)
+            // control point is being moved
+            e.target.style.cursor = 'default';
 
             var xval = e.pageX;
             var yval = e.pageY;
 
-            xval = xval  - $(self.div).parent().offset().left;
-            yval = yval - $(self.div).parent().offset().top- parseInt($(self.div).parent().css('padding-top'));
+            // get the coordinates of the mouse (in relation to the canvas, not the page)
+            xval = xval - $(self.div).parent().offset().left;
+            yval = yval - $(self.div).parent().offset().top - parseInt($(self.div).parent().css('padding-top')) - TOP_SIZE;
 
             // do bounds checking
             if (xval < bounds['minX']) {
@@ -123,11 +101,62 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
                 yval = bounds['maxY'];
             }
 
+            if (dragtype == "YONLY") {
+                xval = dragStartX;
+            } else if (dragtype == "XONLY") {
+                yval = dragStartY;
+            }
+
+            yval += TOP_SIZE;
+
+            // use the size of the control point as well to help put the tooltip in a friendly place
+            var sz = ControlSize;
+            $("#" + ID + '_ctrl' + activePoint + 'div').css('left', xval - sz / 2).css('top', yval - sz / 2);
+
+            // get the x,y graph values of the mouse location
+            var location = self.plotter.ScreenToPointLocation([xval, yval]);
+
+            // update the tooltip
+            $("#tooltipGraph").text(Math.round(location[0]) + "," + Math.round(location[1] * 100) / 100)
+                .css('display', 'inline')
+                .css('top', yval - sz - 20 + $(self.div).parent().offset().top + parseInt($(self.div).parent().css('padding-top')))
+                .css('left', xval + sz + 40 + $(self.div).parent().offset().left);
+
+            // trigger a mousemove over the DOM for any software to hook into
+            $.event.trigger("PlotarithmicMouseMove", [activePoint, location[0], location[1]]);
+        }
+        if (isZooming) {
+            // handle zooming
+            try {
+                e.target.style.cursor = 'default';
+            }
+            catch (Exception) {
+            }
+            // get the coordinates of the mouse (in relation to the canvas, not the page)
+
+            var xval = e.pageX;
+            var yval = e.pageY;
+
+            xval = xval - $(self.div).parent().offset().left;
+            yval = yval - $(self.div).parent().offset().top - parseInt($(self.div).parent().css('padding-top')) - TOP_SIZE;
+
+            // do bounds checking
+            if (xval < bounds['minX']) {
+                xval = bounds['minX'];
+            } else if (xval > bounds['maxX']) {
+                xval = bounds['maxX'];
+            }
+            if (yval < bounds['minY']) {
+                yval = bounds['minY'];
+            } else if (yval > bounds['maxY']) {
+                yval = bounds['maxY'];
+            }
+            yval += TOP_SIZE;
 
             var leftmost = xval < startZoom[0] ? xval : startZoom[0];
             var width = xval < startZoom[0] ? startZoom[0] - xval : xval - startZoom[0] - 4;
             var topmost = yval < startZoom[1] ? yval : startZoom[1];
-            var height = yval < startZoom[1] ? startZoom[1] - yval :  yval - startZoom[1] - 4;
+            var height = yval < startZoom[1] ? startZoom[1] - yval : yval - startZoom[1] - 4;
 
 
             $("#PlotarithmicSelector").css('left', leftmost).css('top', topmost).css('width', width + 'px').css('height', height + 'px').css('display', 'inline');
@@ -135,15 +164,15 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
     });
 
     $(document).on('mouseup', function (e) {
-        if (activePoint != -1) {
-            $("#tooltipGraph").remove();
+
+        if (activePoint != -1 || isZooming) {
             // set new point location
             var xval = e.pageX;
             var yval = e.pageY;
 
 
             xval = xval - $(self.div).parent().offset().left;
-            yval = yval - $(self.div).parent().offset().top- parseInt($(self.div).parent().css('padding-top'));
+            yval = yval - $(self.div).parent().offset().top - parseInt($(self.div).parent().css('padding-top')) - TOP_SIZE;
 
             // do bounds checking
             if (xval < bounds['minX']) {
@@ -156,55 +185,44 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
             } else if (yval > bounds['maxY']) {
                 yval = bounds['maxY'];
             }
+            yval += TOP_SIZE;
 
-            xval = xval - LEFT_SIZE;
+            if (activePoint != -1) {
+                $("#tooltipGraph").remove();
 
-            var location = self.plotter.ScreenToPointLocation([xval, yval]);
-            self.df.SetControlPoint(activePoint, location);
-            $.event.trigger("PlotarithmicMouseUp", [activePoint, location[0], location[1]]);
+                var location = self.plotter.ScreenToPointLocation([xval, yval]);
+                self.df.SetControlPoint(activePoint, location);
+                $.event.trigger("PlotarithmicMouseUp", [activePoint, location[0], location[1]]);
 
-            // remove active point
-            activePoint = -1;
-        }
-        if (isZooming) {
-            // remove the zoom graphic
-            while ( $("#PlotarithmicSelector").length > 0) {
-                $("#PlotarithmicSelector").remove();
+                // remove active point
+                activePoint = -1;
             }
+            if (isZooming) {
+                // remove the zoom graphic
+                while ($("#PlotarithmicSelector").length > 0) {
+                    $("#PlotarithmicSelector").remove();
+                }
 
-            var xval = e.pageX - $(self.div).parent().offset().left - LEFT_SIZE;
-            var yval = e.pageY - $(self.div).parent().offset().top- parseInt($(self.div).parent().css('padding-top'));
+                var leftmost = xval < startZoom[0] ? xval : startZoom[0];
+                var width = xval < startZoom[0] ? startZoom[0] - xval : xval - startZoom[0];
+                var topmost = yval < startZoom[1] ? yval : startZoom[1];
+                var height = yval < startZoom[1] ? startZoom[1] - yval : yval - startZoom[1];
 
-            if (xval < bounds['minX']) {
-                xval = bounds['minX'];
-            } else if (xval > bounds['maxX']) {
-                xval = bounds['maxX'];
+                var topleft = self.plotter.ScreenToPointLocation([leftmost, topmost]);
+                var bottomright = self.plotter.ScreenToPointLocation([leftmost + width, topmost + height]);
+
+                var minX = topleft[0];
+                var maxX = bottomright[0];
+                var minY = topleft[1];
+                var maxY = bottomright[1];
+
+                console.debug([minX, maxX, minY, maxY]);
+
+                $.event.trigger("PlotarithmicZoom", {xaxis:  [minX, maxX], yaxis: [minY, maxY]});
+
+                // zoom is over
+                isZooming = false;
             }
-            if (yval < bounds['minY']) {
-                yval = bounds['minY'];
-            } else if (yval > bounds['maxY']) {
-                yval = bounds['maxY'];
-            }
-
-            var leftmost = xval < startZoom[0] ? xval : startZoom[0];
-            var width = xval < startZoom[0] ? startZoom[0] - xval : xval - startZoom[0];
-            var topmost = yval < startZoom[1] ? yval : startZoom[1];
-            var height = yval < startZoom[1] ? startZoom[1] - yval :  yval - startZoom[1];
-
-            var topleft = self.plotter.ScreenToPointLocation([leftmost, topmost]);
-            var bottomright = self.plotter.ScreenToPointLocation([leftmost + width, topmost + height]);
-
-            var minX = topleft[0];
-            var maxX = bottomright[0];
-            var maxY = topleft[1];
-            var minY = bottomright[1];
-
-            console.debug([minX, maxX, minY, maxY]);
-
-            $.event.trigger("PlotarithmicZoom", [minX, maxX, minY, maxY]);
-
-            // zoom is over
-            isZooming =false;
         }
     });
 
