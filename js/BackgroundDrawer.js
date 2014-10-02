@@ -53,8 +53,8 @@ function BackgroundDrawer(uniqueID, contextVar, boundsVar) {
             YTicks.push(newY);
             context.beginPath();
             context.lineWidth = 0.3;
-            context.moveTo(LEFT_SIZE + 0.5, newY.TickLocation + 0.5);
-            context.lineTo(LEFT_SIZE + bounds['maxX'] - bounds['minX'] + 0.5,newY.TickLocation + 0.5);
+            context.moveTo(LEFT_SIZE + 0.5, newY.TickLocation + 0.5 + TOP_SIZE);
+            context.lineTo(LEFT_SIZE + bounds['maxX'] - bounds['minX'] + 0.5,newY.TickLocation + 0.5 + TOP_SIZE);
             context.strokeStyle = '#ffffff';
             context.closePath();
             context.stroke();
@@ -66,7 +66,7 @@ function BackgroundDrawer(uniqueID, contextVar, boundsVar) {
                 context.font = "12px Verdana";
                 var txty = (Math.round(currentY * 100) / 100).toString();
                 var x =  parseInt(LEFT_SIZE - 11 - (txty.length-1) * 7);
-                var y =  parseInt(newY.TickLocation + 5.5);
+                var y =  parseInt(newY.TickLocation + 5.5 + TOP_SIZE);
                 context.fillText(txty, x, y);
             }
 
@@ -131,8 +131,8 @@ function BackgroundDrawer(uniqueID, contextVar, boundsVar) {
 
             context.beginPath();
             context.lineWidth = value.TickType == TickTypeEnum.MajorTick ? MAJOR_TICKWIDTH : MINOR_TICKWIDTH;
-            context.moveTo(LEFT_SIZE + value.TickLocation + 0.5, 0+ 0.5);
-            context.lineTo(LEFT_SIZE + value.TickLocation+ 0.5, bounds['maxY']-bounds['minY']+ 0.5);
+            context.moveTo(LEFT_SIZE + value.TickLocation + 0.5, TOP_SIZE + 0.5);
+            context.lineTo(LEFT_SIZE + value.TickLocation+ 0.5, bounds['maxY']-bounds['minY']+ 0.5 + TOP_SIZE);
             context.strokeStyle = '#ffffff';
             context.closePath();
             context.stroke();
@@ -142,12 +142,12 @@ function BackgroundDrawer(uniqueID, contextVar, boundsVar) {
                 context.fillStyle = '#FFFFFF';
                 context.font = "12px Verdana";
                 var x =  parseInt(value.TickLocation + 0.5 + LEFT_SIZE - (log10(value['XVal']) * 5));
-                var y =  parseInt(bounds['maxY'] - bounds['minY'] + 15);
+                var y =  parseInt(bounds['maxY'] - bounds['minY'] + 15 + TOP_SIZE);
                 context.fillText(value['XVal'].toString(), x, y);
             }
         });
 
-        if (numberOfLabelsDone == 0) {
+        if (numberOfLabelsDone < 3) {
             // we didn't have any major ticks to add labels to
 
             // add minor tick labels based on how many minor ticks there are
@@ -159,27 +159,44 @@ function BackgroundDrawer(uniqueID, contextVar, boundsVar) {
                 context.fillStyle = '#FFFFFF';
                 context.font = "12px Verdana";
                 var x =  parseInt(value.TickLocation + 0.5 + LEFT_SIZE - (log10(value['XVal']) * 5));
-                var y =  parseInt(bounds['maxY'] - bounds['minY'] + 15);
+                var y =  parseInt(bounds['maxY'] - bounds['minY'] + 15 + TOP_SIZE);
                 context.fillText(value['XVal'].toString(), x, y);
+                numberOfLabelsDone++;
             }
+        }
+
+        if (numberOfLabelsDone == 0) {
+            // still no labels, just put labels at the beginning and end
+            context.fillStyle = '#FFFFFF';
+            context.font = "12px Verdana";
+            var x =  parseInt(0.5 + LEFT_SIZE - 5);
+            var y =  parseInt(bounds['maxY'] - bounds['minY'] + 15 + TOP_SIZE);
+            context.fillText(minXPoint.toString(), x, y);
+            numberOfLabelsDone++;
+            context.fillStyle = '#FFFFFF';
+            context.font = "12px Verdana";
+            var x =  parseInt(bounds['maxX'] - 10 + 0.5);
+            var y =  parseInt(bounds['maxY'] - bounds['minY'] + 15 + TOP_SIZE);
+            context.fillText(maxXPoint.toString(), x, y);
+            numberOfLabelsDone++;
         }
     }
 
     function DrawOuterBorder() {
         // TODO:  allow color?  thickness?
         context.beginPath();
-        context.moveTo(LEFT_SIZE + 0.5, 0);
-        context.lineTo(LEFT_SIZE + bounds['maxX'] - bounds['minX'] + 0.5, 0);
-        context.lineTo(LEFT_SIZE + bounds['maxX'] - bounds['minX'] + 0.5, bounds['maxY'] - bounds['minY']);
-        context.lineTo(LEFT_SIZE + 0.5, bounds['maxY'] - bounds['minY']);
+        context.moveTo(LEFT_SIZE + 0.5, TOP_SIZE);
+        context.lineTo(LEFT_SIZE + bounds['maxX'] - bounds['minX'] + 0.5, TOP_SIZE);
+        context.lineTo(LEFT_SIZE + bounds['maxX'] - bounds['minX'] + 0.5, bounds['maxY'] - bounds['minY'] + TOP_SIZE);
+        context.lineTo(LEFT_SIZE + 0.5, bounds['maxY'] - bounds['minY'] + TOP_SIZE);
         context.fill();
 
         context.beginPath();
         context.lineWidth = 3;
-        context.moveTo(LEFT_SIZE + 0.5, 0);
-        context.lineTo(LEFT_SIZE + bounds['maxX'] - bounds['minX'] + 0.5, 0);
-        context.lineTo(LEFT_SIZE + bounds['maxX'] - bounds['minX'] + 0.5, bounds['maxY'] - bounds['minY'] - 0.5);
-        context.lineTo(LEFT_SIZE + 0.5, bounds['maxY'] - bounds['minY'] - 0.5);
+        context.moveTo(LEFT_SIZE + 0.5, TOP_SIZE);
+        context.lineTo(LEFT_SIZE + bounds['maxX'] - bounds['minX'] + 0.5, TOP_SIZE);
+        context.lineTo(LEFT_SIZE + bounds['maxX'] - bounds['minX'] + 0.5, bounds['maxY'] - bounds['minY'] - 0.5 + TOP_SIZE);
+        context.lineTo(LEFT_SIZE + 0.5, bounds['maxY'] - bounds['minY'] - 0.5 + TOP_SIZE);
         context.strokeStyle = '#ffffff';
         context.closePath();
         context.stroke();
@@ -188,10 +205,10 @@ function BackgroundDrawer(uniqueID, contextVar, boundsVar) {
     this.FinishingTouches = function() {
         context.beginPath();
         context.lineWidth = 3;
-        context.moveTo(LEFT_SIZE + 0.5, 0);
-        context.lineTo(LEFT_SIZE + bounds['maxX'] - bounds['minX'] + 0.5, 0);
-        context.lineTo(LEFT_SIZE + bounds['maxX'] - bounds['minX'] + 0.5, bounds['maxY'] - bounds['minY'] - 0.5);
-        context.lineTo(LEFT_SIZE + 0.5, bounds['maxY'] - bounds['minY'] - 0.5);
+        context.moveTo(LEFT_SIZE + 0.5, TOP_SIZE);
+        context.lineTo(LEFT_SIZE + bounds['maxX'] - bounds['minX'] + 0.5, TOP_SIZE);
+        context.lineTo(LEFT_SIZE + bounds['maxX'] - bounds['minX'] + 0.5, bounds['maxY'] - bounds['minY'] - 0.5 + TOP_SIZE);
+        context.lineTo(LEFT_SIZE + 0.5, bounds['maxY'] - bounds['minY'] - 0.5 + TOP_SIZE);
         context.strokeStyle = '#ffffff';
         context.closePath();
         context.stroke();

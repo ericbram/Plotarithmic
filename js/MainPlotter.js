@@ -21,6 +21,12 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
         $.each(self.data, function (index, value) {
             // inside this array is an array of x,y coordinates
 
+            var ctrlID = ID + '_ctrl' + index;
+            var sizeval = 16;
+            while ($("#" + ctrlID + 'div').length > 0) {
+                $("#" + ctrlID + 'div').remove();
+            }
+
             // do not draw if not visible
             if (!value.visible) {
                 return;
@@ -28,16 +34,46 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
 
             // use lastY to avoid drawing unnecessary lines
             var last = self.PointToScreenLocation(value.data[0][0], value.data[0][1]);
-            var lastdrawn = self.PointToScreenLocation(value.data[0][0], value.data[0][1]);
+
+            if (last[0] < bounds['minX']) {
+                last[0] = bounds['minX'];
+            } else if (last[0] > bounds['maxX']) {
+                last[0] = bounds['maxX'];
+            }
+
+            if (last[1] < bounds['minY']) {
+                last[1] = bounds['minY'];
+            } else if (last[1] > bounds['maxY']) {
+                last[1] = bounds['maxY'];
+            }
+
+            var lastdrawn = [last[0], last[1]];
+
+
             var coord;
             for (var i = 0; i < value.data.length; i++) {
                 // inside here is a single x,y coordinate at value.data[i]
+                try {
                 coord = self.PointToScreenLocation(value.data[i][0], value.data[i][1]);
                 // calculate next point and draw line to it
-
+                }  catch (Exception) {
+                    console.error(Exception);
+                }
                 // if we didnt even move over a pixel, don't bother
                 if (Math.round(coord[0]) == Math.round(last[0]))
                     continue;
+
+                if (coord[0] < bounds['minX']) {
+                    coord[0] = bounds['minX'];
+                } else if (coord[0] > bounds['maxX']) {
+                    coord[0] = bounds['maxX'];
+                }
+
+                if (coord[1] < bounds['minY']) {
+                    coord[1] = bounds['minY'];
+                } else if (coord[1] > bounds['maxY']) {
+                    coord[1] = bounds['maxY'];
+                }
 
                 // draw changing line
                 if (lastdrawn[1] != coord[1]) {
@@ -68,23 +104,19 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
 
             // now it's time to draw the control point
 
+            var ctrlLoc = self.PointToScreenLocation(value.control.location[0], value.control.location[1]);
+
+
             // don't draw if not visible
             if (!value.control.visible) {
                 return;
-            }
-
-            var ctrlLoc = self.PointToScreenLocation(value.control.location[0], value.control.location[1]);
-            var ctrlID = ID + '_ctrl' + index;
-            var sizeval = 16;
-            while ($("#" + ctrlID + 'div').length > 0) {
-                $("#" + ctrlID + 'div').remove();
             }
 
             $(baseDiv).append('<div id=\"' + ctrlID + 'div\"/>');
             $("#" + ctrlID + "div").append('<canvas id=\"' + ctrlID + '\"/>');
             $("#" + ctrlID + "div").css('position', 'absolute')
                 .css('left', ctrlLoc[0] - sizeval / 2)
-                .css('top', ctrlLoc[1] - sizeval / 2 + TOP_SIZE)
+                .css('top', ctrlLoc[1] - sizeval / 2)
                 .css('width', sizeval)
                 .css('height', sizeval);
 
@@ -131,7 +163,7 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
         var difflog = log10(maxX) - log10(minX);
 
         // get the percentage that the click was across the horizontal plane
-        var perc = (point[0] - LEFT_SIZE)  / pixelsX;
+        var perc = (point[0] - LEFT_SIZE) / pixelsX;
 
         // convert that percentage to an X value
         var xval = Math.pow(10, log10(minX) + perc * difflog);
@@ -147,7 +179,12 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
         // get the log of the value to convert
         var logData = log10(dataX);
         // get the percentage this value is in relation to the entire range
-        var percX = (logData - log10(minX)) / logDiffX;
+        var percX;
+        if (logDiffX == 0) {
+            percX = 0;
+        } else {
+            percX = (logData - log10(minX)) / logDiffX;
+        }
         // multiply this percentage by the width in pixels to get the pixel over
         var xCoord = pixelsX * percX + LEFT_SIZE;
 
@@ -159,9 +196,14 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
             yVal = maxY - dataY;
         }
         // get the percentage this value is in relation to the entire range
-        var percY = yVal / diffY;
+        var percY;
+        if (diffY == 0) {
+            percY = 0;
+        } else {
+            percY = yVal / diffY;
+        }
         // multiply this percentage by the width in pixels to get the pixel over
-        var yCoord = pixelsY * percY;
+        var yCoord = pixelsY * percY + TOP_SIZE;
 
         return [xCoord, yCoord];
     }

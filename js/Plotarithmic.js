@@ -1,21 +1,40 @@
-function Plotarithmic(uniqueID, dataval, graphDiv, bounds) {
+var ControlSize = 16;
+var LEFT_SIZE = 70;
+var BOTTOM_SIZE = 50;
+var TOP_SIZE = 20;
+var RIGHT_SIZE = 50;
+
+function Plotarithmic(uniqueID, dataval, graphDiv, bounds, options) {
+    try {
+        if (typeof(options) != 'undefined') {
+            ControlSize = options['ControlSize'];
+            LEFT_SIZE = options['left'];
+            RIGHT_SIZE = options['right'];
+            TOP_SIZE = options['top'];
+            BOTTOM_SIZE = options['bottom'];
+        }
+    }  catch (Exception) {
+        console.error("no options defined, or defined improperly");
+    }
     var firstrun = true;
     var self = this;
-    var bounds = {minX: LEFT_SIZE, minY: 0, maxX: graphDiv.width(), maxY: graphDiv.height() - TOP_SIZE - BOTTOM_SIZE, minXValue: bounds['minXValue'], maxXValue: bounds['maxXValue'], minYValue: bounds['minYValue'], maxYValue: bounds['maxYValue']};
+    var bounds = {minX: LEFT_SIZE, minY: TOP_SIZE, maxX: graphDiv.width() - RIGHT_SIZE, maxY: graphDiv.height() - BOTTOM_SIZE, minXValue: bounds['minXValue'], maxXValue: bounds['maxXValue'], minYValue: bounds['minYValue'], maxYValue: bounds['maxYValue']};
     var minYticks = 8;
     var maxYticks = 16;
     var dfLocal, grapherLocal, events;
 
-    Setup(dataval, bounds);
+    Setup(dataval, bounds, options);
 
 
-    function Setup(Maindata, bounds) {
+    function Setup(Maindata, bounds, options) {
+
+
+
         $(graphDiv).append('<canvas id=\"' + uniqueID + 'innerGraphCanvas\"/>');
-        $("#" + uniqueID + "innerGraphCanvas").css('left', bounds['minX'] - LEFT_SIZE).css('top', bounds['minY']).css('margin-top', TOP_SIZE);
         var canvas = document.getElementById(uniqueID + 'innerGraphCanvas');
         var context = canvas.getContext('2d');
-        canvas.width = bounds['maxX'] - bounds['minX'] + LEFT_SIZE;
-        canvas.height = bounds['maxY'] - bounds['minY'] + BOTTOM_SIZE;
+        canvas.width = bounds['maxX'] + bounds['minX'];
+        canvas.height = bounds['maxY'] + bounds['minY'];
         dfLocal = new DataFormatter();
         dfLocal.SetData(Maindata);
 
