@@ -50,9 +50,9 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
                 if (dragtype == "XONLY" || dragtype == "YONLY" || dragtype) {
                     activePoint = pt;
                     var tmppoint = self.df.GetControlPoint(pt);
-                    var scloc = self.plotter.PointToScreenLocation(tmppoint[0],tmppoint[1]);
-                    dragStartX = scloc[0];
-                    dragStartY = scloc[1];
+                    var scloc = self.plotter.PointToScreenLocation(tmppoint[0], tmppoint[1]);
+                    dragStartX = screencoords[0];
+                    dragStartY = screencoords[1];
                     showTooltip(screencoords[0], screencoords[1], screencoords[0] + "," + screencoords[1]);
                 }
             }
@@ -106,6 +106,14 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
 
             if (activePoint != -1) {
 
+                // check to see if there's a limit to the drag point
+                // if there is, do not let the user drag outside of the axis bounds
+                if (dragtype == "XONLY") {
+                    yval = dragStartY;
+                } else if (dragtype == "YONLY") {
+                    xval = dragStartX;
+                }
+
                 // use the size of the control point as well to help put the tooltip in a friendly place
                 var sz = ControlSize;
                 $("#" + ID + '_ctrl' + activePoint + 'div').css('left', xval - sz / 2).css('top', yval - sz / 2);
@@ -113,7 +121,15 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
                 // get the x,y graph values of the mouse location
                 var location = self.plotter.ScreenToPointLocation([xval, yval]);
 
-                // update the tooltip
+                // sometimes there's a bit of a round going on with regards to the dragging of the point
+                // this just evens it out for display purposes
+                if (dragtype == "XONLY") {
+                    location[1] = 0;
+                } else if (dragtype == "YONLY") {
+                    location[0] = 0;
+                }
+
+                // update the tooltip with the tooltips location and value
                 $("#tooltipGraph").text(Math.round(location[0]) + "," + Math.round(location[1] * 100) / 100)
                     .css('display', 'inline')
                     .css('top', yval - sz - 20 + $(self.div).parent().offset().top + parseInt($(self.div).parent().css('padding-top')))
@@ -125,11 +141,11 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
             if (isZooming) {
                 // handle zooming
 
+                // change the current size of the zoom box
                 var leftmost = xval < startZoom[0] ? xval : startZoom[0];
                 var width = xval < startZoom[0] ? startZoom[0] - xval : xval - startZoom[0] - 4;
                 var topmost = yval < startZoom[1] ? yval : startZoom[1];
                 var height = yval < startZoom[1] ? startZoom[1] - yval : yval - startZoom[1] - 4;
-
 
                 $("#PlotarithmicSelector").css('left', leftmost).css('top', topmost).css('width', width + 'px').css('height', height + 'px').css('display', 'inline');
             }
@@ -160,13 +176,26 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
             }
 
             if (activePoint != -1) {
+
+                // check to see if there's a limit to the drag point
+                // if there is, do not let the user drag outside of the axis bounds
+                if (dragtype == "XONLY") {
+                    yval = dragStartY;
+                } else if (dragtype == "YONLY") {
+                    xval = dragStartX;
+                }
+
+                // remove the tooltip because the drag is done
                 $("#tooltipGraph").remove();
 
+                // update the value for the control point
                 var location = self.plotter.ScreenToPointLocation([xval, yval]);
                 self.df.SetControlPoint(activePoint, location);
+
+                // trigger the mouseup event for any handler code to process
                 $.event.trigger("PlotarithmicMouseUp", [activePoint, location[0], location[1]]);
 
-                // remove active point
+                // remove active point since drag is done
                 activePoint = -1;
             }
             if (isZooming) {
@@ -175,6 +204,8 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
                     $("#PlotarithmicSelector").remove();
                 }
 
+
+                // calculate zoom bounds
                 var leftmost = xval < startZoom[0] ? xval : startZoom[0];
                 var width = xval < startZoom[0] ? startZoom[0] - xval : xval - startZoom[0];
                 var topmost = yval < startZoom[1] ? yval : startZoom[1];
@@ -188,9 +219,10 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
                 var minY = bottomright[1];
                 var maxY = topleft[1];
 
-                console.debug([minX, maxX, minY, maxY]);
-
-                $.event.trigger("PlotarithmicZoom", {xaxis:  [minX, maxX], yaxis: [minY, maxY]});
+                // trigger zoom event for user to handle with the new bounds
+                // since we do not have the data in order to calculate new points here,
+                // we cannot do the zoom within this library
+                $.event.trigger("PlotarithmicZoom", {xaxis: [minX, maxX], yaxis: [minY, maxY]});
 
                 // zoom is over
                 isZooming = false;

@@ -18,7 +18,12 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
 
     this.Graph = function () {
         SetupBoundaries();
-        $.each(self.data, function (index, value) {
+        // draw in reverse order, since we add HTML to the DOM,
+        // we want to have the first element added last, which means
+        // it'll get rendered on top.  this way, control points and lines
+        // overlap as you'd expect, with 1 being on top of 2, etc
+        for (var index = self.data.length - 1; index >= 0; index--) {
+            var value = self.data[index];
             // inside this array is an array of x,y coordinates
 
             var ctrlID = ID + '_ctrl' + index;
@@ -29,7 +34,7 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
 
             // do not draw if not visible
             if (!value.visible) {
-                return;
+                continue;
             }
 
             // use lastY to avoid drawing unnecessary lines
@@ -54,9 +59,9 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
             for (var i = 0; i < value.data.length; i++) {
                 // inside here is a single x,y coordinate at value.data[i]
                 try {
-                coord = self.PointToScreenLocation(value.data[i][0], value.data[i][1]);
-                // calculate next point and draw line to it
-                }  catch (Exception) {
+                    coord = self.PointToScreenLocation(value.data[i][0], value.data[i][1]);
+                    // calculate next point and draw line to it
+                } catch (Exception) {
                     console.error(Exception);
                 }
                 // if we didnt even move over a pixel, don't bother
@@ -109,7 +114,7 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
 
             // don't draw if not visible
             if (!value.control.visible) {
-                return;
+                continue;
             }
 
             $(baseDiv).append('<div id=\"' + ctrlID + 'div\"/>');
@@ -137,7 +142,7 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
             var divisor = index + 1 >= 10 ? 7 : 3;
             tmpcontext.fillText(index + 1, sizeval / divisor, sizeval / 1.5);
             tmpcontext.closePath();
-        });
+        }
     }
 
     // this is called sparingly to save on calculation time
