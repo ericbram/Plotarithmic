@@ -40,6 +40,7 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
             // use lastY to avoid drawing unnecessary lines
             var last = self.PointToScreenLocation(value.data[0][0], value.data[0][1]);
 
+            // check the bounds of the point to see if it's valid
             if (last[0] < bounds['minX']) {
                 last[0] = bounds['minX'];
             } else if (last[0] > bounds['maxX']) {
@@ -96,6 +97,21 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
                 last = coord;
             }
 
+            // do a final check on bounds to draw a final line
+            if (coord[0] < bounds['minX']) {
+                coord[0] = bounds['minX'];
+            } else if (coord[0] > bounds['maxX']) {
+                coord[0] = bounds['maxX'];
+            }
+
+            if (coord[1] < bounds['minY']) {
+                coord[1] = bounds['minY'];
+            } else if (coord[1] > bounds['maxY']) {
+                coord[1] = bounds['maxY'];
+            }
+
+            // if no line was ever drawn, draw it here if applicable
+            // this would be used in conditions like a straight line across
             if (lastdrawn[0] != coord[0]) {
                 context.beginPath();
                 context.lineWidth = 1;
