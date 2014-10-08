@@ -19,7 +19,7 @@ function BackgroundDrawer(uniqueID, contextVar, boundsVar) {
     }
 
     function DrawYAxis(minticks, maxticks) {
-           var diffY = bounds['maxYValue'] - bounds['minYValue'];
+        var diffY = bounds['maxYValue'] - bounds['minYValue'];
 
         // try to see if there is a whole # divisor
         // that falls within the min and max ticks
@@ -27,9 +27,9 @@ function BackgroundDrawer(uniqueID, contextVar, boundsVar) {
         var tickAdder = -1;
         var numberOfTicks = -1;
         for (var i = minticks + 1; i < maxticks - 1; i++) {
-            if (diffY % (i-1) == 0) {
+            if (diffY % (i - 1) == 0) {
                 // this is a whole # divisor, this will be our graph multiplier
-                tickAdder = diffY / (i-1);
+                tickAdder = diffY / (i - 1);
                 numberOfTicks = i;
                 break;
             }
@@ -39,8 +39,8 @@ function BackgroundDrawer(uniqueID, contextVar, boundsVar) {
         // so we'll just use the minimum number of ticks
         // and accept that the values on the side will be decimal
         if (numberOfTicks == -1) {
-             numberOfTicks = minticks;
-          tickAdder = diffY/(minticks - 1);
+            numberOfTicks = minticks;
+            tickAdder = diffY / (minticks - 1);
         }
 
         var iterator = parseInt(numberOfTicks / 6);
@@ -54,7 +54,7 @@ function BackgroundDrawer(uniqueID, contextVar, boundsVar) {
             context.beginPath();
             context.lineWidth = 0.3;
             context.moveTo(LEFT_SIZE + 0.5, newY.TickLocation + 0.5 + TOP_SIZE);
-            context.lineTo(LEFT_SIZE + bounds['maxX'] - bounds['minX'] + 0.5,newY.TickLocation + 0.5 + TOP_SIZE);
+            context.lineTo(LEFT_SIZE + bounds['maxX'] - bounds['minX'] + 0.5, newY.TickLocation + 0.5 + TOP_SIZE);
             context.strokeStyle = '#ffffff';
             context.closePath();
             context.stroke();
@@ -65,8 +65,8 @@ function BackgroundDrawer(uniqueID, contextVar, boundsVar) {
                 context.fillStyle = '#FFFFFF';
                 context.font = "12px Verdana";
                 var txty = (Math.round(currentY * 100) / 100).toString();
-                var x =  parseInt(LEFT_SIZE - 11 - (txty.length-1) * 7);
-                var y =  parseInt(newY.TickLocation + 5.5 + TOP_SIZE);
+                var x = parseInt(LEFT_SIZE - 11 - (txty.length - 1) * 7);
+                var y = parseInt(newY.TickLocation + 5.5 + TOP_SIZE);
                 context.fillText(txty, x, y);
             }
 
@@ -86,7 +86,7 @@ function BackgroundDrawer(uniqueID, contextVar, boundsVar) {
             var MajorX = Math.round(Math.pow(10, i));
             if (minXPoint <= MajorX && maxXPoint >= MajorX) {
                 // this is a valid major tick within range
-                if (!ContainsX(XTicks,MajorX)) {
+                if (!ContainsX(XTicks, MajorX)) {
                     XTicks.push({
                         XVal: MajorX,
                         TickType: TickTypeEnum.MajorTick,
@@ -101,7 +101,7 @@ function BackgroundDrawer(uniqueID, contextVar, boundsVar) {
                 if (minXPoint < MinorVal &&
                     maxXPoint > MinorVal) {
                     // this is a valid minor tick
-                    if (!ContainsX(XTicks,MinorVal)) {
+                    if (!ContainsX(XTicks, MinorVal)) {
                         XTicks.push({
                             XVal: MinorVal,
                             TickType: TickTypeEnum.MinorTick,
@@ -111,9 +111,13 @@ function BackgroundDrawer(uniqueID, contextVar, boundsVar) {
                 }
             }
         }
-        XTicks.sort(function(a,b){
-            if(a.XVal > b.XVal){ return 1}
-            if(a.XVal < b.XVal){ return -1}
+        XTicks.sort(function (a, b) {
+            if (a.XVal > b.XVal) {
+                return 1
+            }
+            if (a.XVal < b.XVal) {
+                return -1
+            }
             return 0;
         });
 
@@ -123,27 +127,27 @@ function BackgroundDrawer(uniqueID, contextVar, boundsVar) {
 
         var numberOfLabelsDone = 0;
 
+        var fillArraytmp = [];
+
         // draw the actual lines
         $.each(XTicks, function (index, value) {
             var logVal = log10(value['XVal'])
-            var percentageX = (logVal-logminX)/difflog;
-            value.TickLocation =  percentageX * (bounds['maxX'] - bounds['minX']);
+            var percentageX = (logVal - logminX) / difflog;
+            value.TickLocation = percentageX * (bounds['maxX'] - bounds['minX']);
 
             context.beginPath();
             context.lineWidth = value.TickType == TickTypeEnum.MajorTick ? MAJOR_TICKWIDTH : MINOR_TICKWIDTH;
             context.moveTo(LEFT_SIZE + value.TickLocation + 0.5, TOP_SIZE + 0.5);
-            context.lineTo(LEFT_SIZE + value.TickLocation+ 0.5, bounds['maxY']-bounds['minY']+ 0.5 + TOP_SIZE);
+            context.lineTo(LEFT_SIZE + value.TickLocation + 0.5, bounds['maxY'] - bounds['minY'] + 0.5 + TOP_SIZE);
             context.strokeStyle = '#ffffff';
             context.closePath();
             context.stroke();
             context.closePath();
             if (value.TickType == TickTypeEnum.MajorTick) {
                 numberOfLabelsDone++;
-                context.fillStyle = '#FFFFFF';
-                context.font = "12px Verdana";
-                var x =  parseInt(value.TickLocation + 0.5 + LEFT_SIZE - (log10(value['XVal']) * 5));
-                var y =  parseInt(bounds['maxY'] - bounds['minY'] + 15 + TOP_SIZE);
-                context.fillText(value['XVal'].toString(), x, y);
+                var x = parseInt(value.TickLocation + 0.5 + LEFT_SIZE - (log10(value['XVal']) * 5));
+                var y = parseInt(bounds['maxY'] - bounds['minY'] + 15 + TOP_SIZE);
+                fillArraytmp.push([value['XVal'].toString(), x, y]);
             }
         });
 
@@ -151,16 +155,14 @@ function BackgroundDrawer(uniqueID, contextVar, boundsVar) {
             // we didn't have any major ticks to add labels to
 
             // add minor tick labels based on how many minor ticks there are
-            var iterator = parseInt(XTicks.length/10);
+            var iterator = parseInt(XTicks.length / 10);
             if (iterator < 1)
                 iterator = 1;
-            for (var i = 0; i < XTicks.length; i+= iterator) {
+            for (var i = 0; i < XTicks.length; i += iterator) {
                 var value = XTicks[i];
-                context.fillStyle = '#FFFFFF';
-                context.font = "12px Verdana";
-                var x =  parseInt(value.TickLocation + 0.5 + LEFT_SIZE - (log10(value['XVal']) * 5));
-                var y =  parseInt(bounds['maxY'] - bounds['minY'] + 15 + TOP_SIZE);
-                context.fillText(value['XVal'].toString(), x, y);
+                var x = parseInt(value.TickLocation + 0.5 + LEFT_SIZE - (log10(value['XVal']) * 5));
+                var y = parseInt(bounds['maxY'] - bounds['minY'] + 15 + TOP_SIZE);
+                fillArraytmp.push([value['XVal'].toString(), x, y]);
                 numberOfLabelsDone++;
             }
         }
@@ -169,17 +171,69 @@ function BackgroundDrawer(uniqueID, contextVar, boundsVar) {
             // still no labels, just put labels at the beginning and end
             context.fillStyle = '#FFFFFF';
             context.font = "12px Verdana";
-            var x =  parseInt(0.5 + LEFT_SIZE - 5);
-            var y =  parseInt(bounds['maxY'] - bounds['minY'] + 15 + TOP_SIZE);
+            var x = parseInt(0.5 + LEFT_SIZE - 5);
+            var y = parseInt(bounds['maxY'] - bounds['minY'] + 15 + TOP_SIZE);
             context.fillText(minXPoint.toString(), x, y);
             numberOfLabelsDone++;
-            context.fillStyle = '#FFFFFF';
-            context.font = "12px Verdana";
-            var x =  parseInt(bounds['maxX'] - 10 + 0.5);
-            var y =  parseInt(bounds['maxY'] - bounds['minY'] + 15 + TOP_SIZE);
-            context.fillText(maxXPoint.toString(), x, y);
+            var x = parseInt(bounds['maxX'] - 10 + 0.5);
+            var y = parseInt(bounds['maxY'] - bounds['minY'] + 15 + TOP_SIZE);
+            fillArraytmp.push([maxXPoint.toString(), x, y]);
             numberOfLabelsDone++;
         }
+
+        function compare(a, b) {
+            if (a[1] < b[1])
+                return -1;
+            if (a[1] > b[1])
+                return 1;
+            return 0;
+        }
+
+        fillArraytmp.sort(compare);
+
+        // remove any duplicates
+        var fillArray = [];
+        var xval = [];
+        for (var i = 0; i < fillArraytmp.length; i++) {
+            if ($.inArray(fillArraytmp[i][1], xval) == -1) {
+                // not included yet
+                fillArray.push(fillArraytmp[i]);
+                xval.push(fillArraytmp[i][1]);
+            }
+        }
+
+        // now we have all of the labels that we want to draw,
+        // need to make sure that none of them are going to overlap
+        if (fillArray.length == 1) {
+            context.fillStyle = '#FFFFFF';
+            context.font = "12px Verdana";
+            context.fillText(fillArray[0][0], fillArray[0][1], fillArray[0][2]);
+        } else {
+            context.fillStyle = '#FFFFFF';
+            context.font = "12px Verdana";
+            context.fillText(fillArray[0][0], fillArray[0][1], fillArray[0][2]);
+            // get the length of the previous item
+            // if the length of the previous item + a small buffer is
+            // greater than or equal to the start of this item, just skip
+            // this item
+            var length = context.measureText(fillArray[0][0]).width;
+            var prevStart = fillArray[0][1];
+            var BUFFER = 15;
+            for (var i = 1; i < fillArray.length; i++) {
+                if (BUFFER + length + prevStart < fillArray[i][1]) {
+                    // there is enough room to print this label!
+                    context.fillText(fillArray[i][0], fillArray[i][1], fillArray[i][2]);
+                    length = context.measureText(fillArray[i][0]).width;
+                    prevStart = fillArray[i][1];
+                }  else {
+                    console.debug('skipped:');
+                    console.debug(fillArray[i]);
+                    console.debug(BUFFER + length + prevStart);
+                }
+            }
+        }
+
+
     }
 
     function DrawOuterBorder() {
@@ -202,7 +256,7 @@ function BackgroundDrawer(uniqueID, contextVar, boundsVar) {
         context.stroke();
     }
 
-    this.FinishingTouches = function() {
+    this.FinishingTouches = function () {
         context.beginPath();
         context.lineWidth = 3;
         context.moveTo(LEFT_SIZE + 0.5, TOP_SIZE);
