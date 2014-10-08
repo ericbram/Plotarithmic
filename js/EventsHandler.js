@@ -136,7 +136,7 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
                     .css('left', xval + sz + $(self.div).parent().offset().left);
 
                 // trigger a mousemove over the DOM for any software to hook into
-                $.event.trigger("PlotarithmicMouseMove", [activePoint, location[0], location[1]]);
+                $(div).trigger("PlotarithmicMouseMove", [activePoint, location[0], location[1]]);
             }
             if (isZooming) {
                 // handle zooming
@@ -193,7 +193,7 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
                 self.df.SetControlPoint(activePoint, location);
 
                 // trigger the mouseup event for any handler code to process
-                $.event.trigger("PlotarithmicMouseUp", [activePoint, location[0], location[1]]);
+                $(div).trigger("PlotarithmicMouseUp", [activePoint, location[0], location[1]]);
 
                 // remove active point since drag is done
                 activePoint = -1;
@@ -222,7 +222,7 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
                 // trigger zoom event for user to handle with the new bounds
                 // since we do not have the data in order to calculate new points here,
                 // we cannot do the zoom within this library
-                $.event.trigger("PlotarithmicZoom", {xaxis: [minX, maxX], yaxis: [minY, maxY]});
+                $(div).trigger("PlotarithmicZoom", {xaxis: [minX, maxX], yaxis: [minY, maxY]});
 
                 // zoom is over
                 isZooming = false;
