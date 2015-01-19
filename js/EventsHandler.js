@@ -12,6 +12,7 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
     self.df = df;
     self.plotter = plotter;
     var activePoint = -1;
+    var activeDataPoint = -1;
     var startZoom = [];
     var isZooming = false;
 
@@ -38,7 +39,9 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
                     e.pageY - $(this).parent().offset().top - parseInt($(this).parent().css('padding-top'))];
 
             // need to see if these screen coords are within a control point
-            var pt = self.plotter.IsPointInsideCtrlPt(screencoords);
+            var ptTmp = self.plotter.IsPointInsideCtrlPt(screencoords);
+            var pt = ptTmp[0];
+            activeDataPoint = ptTmp[1];
             if (pt > -1) {
 
                 // it's time to start a drag... if it's draggable
@@ -49,8 +52,6 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
                 // just so we don't have to compute that during every move event
                 if (dragtype == "XONLY" || dragtype == "YONLY" || dragtype) {
                     activePoint = pt;
-                    var tmppoint = self.df.GetControlPoint(pt);
-                    var scloc = self.plotter.PointToScreenLocation(tmppoint[0], tmppoint[1]);
                     dragStartX = screencoords[0];
                     dragStartY = screencoords[1];
                     showTooltip(screencoords[0], screencoords[1], screencoords[0] + "," + screencoords[1]);
@@ -136,7 +137,7 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
                     .css('left', xval + sz + $(self.div).parent().offset().left);
 
                 // trigger a mousemove over the DOM for any software to hook into
-                $(div).trigger("PlotarithmicMouseMove", [activePoint, location[0], location[1]]);
+                $(div).trigger("PlotarithmicMouseMove", [activeDataPoint, location[0], location[1]]);
             }
             if (isZooming) {
                 // handle zooming
@@ -193,7 +194,7 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
                 self.df.SetControlPoint(activePoint, location);
 
                 // trigger the mouseup event for any handler code to process
-                $(div).trigger("PlotarithmicMouseUp", [activePoint, location[0], location[1]]);
+                $(div).trigger("PlotarithmicMouseUp", [activeDataPoint, location[0], location[1]]);
 
                 // remove active point since drag is done
                 activePoint = -1;

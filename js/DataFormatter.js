@@ -80,6 +80,9 @@ function DataFormatter() {
             if (singlePlot.control == null || typeof singlePlot.control == 'undefined') {
                 singlePlot.control = {};
             }
+            if (singlePlot.index == null || typeof singlePlot.index == 'undefined') {
+                singlePlot.index = -1;
+            }
             if (singlePlot.control.visible == null || typeof singlePlot.control.visible == 'undefined') {
                 singlePlot.control.visible = true;
             }

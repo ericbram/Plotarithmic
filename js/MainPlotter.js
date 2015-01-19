@@ -57,7 +57,10 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
 
 
             var coord;
+            var OutOfBounds = false;
+            var OutOfBoundsThisRound = false;
             for (var i = 0; i < value.data.length; i++) {
+                OutOfBoundsThisRound = false;
                 // inside here is a single x,y coordinate at value.data[i]
                 try {
                     coord = self.PointToScreenLocation(value.data[i][0], value.data[i][1]);
@@ -77,8 +80,24 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
 
                 if (coord[1] < bounds['minY']) {
                     coord[1] = bounds['minY'];
+                    OutOfBounds = true;
+                    OutOfBoundsThisRound = true;
                 } else if (coord[1] > bounds['maxY']) {
                     coord[1] = bounds['maxY'];
+                    OutOfBounds = true;
+                    OutOfBoundsThisRound = true;
+                }
+
+                // we were out of bounds for a while, but now
+                // we are back in bounds.  in this case, we want
+                // to set the new starting point X to current X value
+
+                // this basically means we just shift over some X points
+                // and that shift means that we don't draw a diagonal line
+                // as we return back to valid values again
+                if (OutOfBounds && !OutOfBoundsThisRound) {
+                    OutOfBounds = false;
+                    lastdrawn[0] = coord[0];
                 }
 
                 // draw changing line
@@ -155,8 +174,10 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
 
             tmpcontext.beginPath();
             tmpcontext.fillStyle = value.control.forecolor;
-            var divisor = index + 1 >= 10 ? 7 : 3;
-            tmpcontext.fillText(index + 1, sizeval / divisor, sizeval / 1.5);
+
+            var numval = self.data[index].index + 1;
+            var divisor = numval >= 10 ? 7 : 3;
+            tmpcontext.fillText(numval, sizeval / divisor, sizeval / 1.5);
             tmpcontext.closePath();
         }
     }
@@ -238,7 +259,7 @@ function MainPlotter(uniqueID, contextVar, boundsVar, sentDiv) {
                 if (dist < ControlSize / 2) {
                     // it's within the radius!
                     // return this instance
-                    return i;
+                    return [i, self.data[i].index];
                 }
             }
         }

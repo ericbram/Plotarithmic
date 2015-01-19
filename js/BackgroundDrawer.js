@@ -225,10 +225,6 @@ function BackgroundDrawer(uniqueID, contextVar, boundsVar) {
                     context.fillText(fillArray[i][0], fillArray[i][1], fillArray[i][2]);
                     length = context.measureText(fillArray[i][0]).width;
                     prevStart = fillArray[i][1];
-                }  else {
-                    console.debug('skipped:');
-                    console.debug(fillArray[i]);
-                    console.debug(BUFFER + length + prevStart);
                 }
             }
         }
