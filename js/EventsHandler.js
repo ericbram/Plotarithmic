@@ -220,11 +220,18 @@ function EventsHandler(idval, mainDiv, boundsVar, dataFormatter, plotterVar) {
                 var minY = bottomright[1];
                 var maxY = topleft[1];
 
-                // trigger zoom event for user to handle with the new bounds
-                // since we do not have the data in order to calculate new points here,
-                // we cannot do the zoom within this library
-                $(div).trigger("PlotarithmicZoom", {xaxis: [minX, maxX], yaxis: [minY, maxY]});
-
+                if (startZoom[0] == xval && startZoom[1] == yval) {
+                    // don't do anything, this was
+                    // just a mouse click, and we don't
+                    // really want to be zooming if we
+                    // haven't changed location
+                }
+                else {
+                    // trigger zoom event for user to handle with the new bounds
+                    // since we do not have the data in order to calculate new points here,
+                    // we cannot do the zoom within this library
+                    $(div).trigger("PlotarithmicZoom", {xaxis: [minX, maxX], yaxis: [minY, maxY]});
+                }
                 // zoom is over
                 isZooming = false;
             }
